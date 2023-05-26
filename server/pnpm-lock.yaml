@@ -19,7 +19,7 @@ dependencies:
 
 devDependencies:
   nodemon:
-    specifier: ^2.0.20
+    specifier: ^2.0.22
     version: 2.0.22
 
 packages:
