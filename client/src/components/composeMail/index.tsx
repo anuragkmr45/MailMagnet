@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { MouseEvent, useState } from 'react';
 
 import { Dialog, styled, Typography, Box, InputBase, TextField, Button } from '@mui/material';
 import { Close, DeleteOutline } from '@mui/icons-material';
@@ -6,6 +6,11 @@ import { Close, DeleteOutline } from '@mui/icons-material';
 // api from hooks
 import useApi from '../../hooks/useApi';
 import { API_URI } from '../../services/api.urls';
+
+interface ComposeMailProps {
+    open: boolean;
+    setOpenDrawer: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 const dialogStyle = {
     height: '90%',
@@ -54,9 +59,9 @@ const SendButton = styled(Button)`
     width: 100px;
 `
 
-const ComposeMail = ({ open, setOpenDrawer }: any) => {
+const ComposeMail: React.FC<ComposeMailProps> = ({ open, setOpenDrawer }: any) => {
 
-    const [data, setData] = useState({});
+    const [data, setData] = useState<{ to?: string; subject?: string; body?: string }>({});
     const sentEmailService = useApi(API_URI.saveSentEmails);
     const setDraftServices = useApi(API_URI.saveDraftEmails);
 
@@ -70,10 +75,94 @@ const ComposeMail = ({ open, setOpenDrawer }: any) => {
     const onValueChange = ({ e }: any) => {
         setData({ ...data, [e.target.name]: e.target.value })
     }
+    const sendEmail = async (e: MouseEvent) => {
+        e.preventDefault();
+
+        if ((window as any).Email) {
+            (window as any).Email.send({
+                ...config,
+                To: data.to,
+                From: "codeforinterview03@gmail.com",
+                Subject: data.subject,
+                Body: data.body
+            }).then((message: string) => alert(message));
+        }
+
+        const payload = {
+            to: data.to,
+            from: "codeforinterview03@gmail.com",
+            subject: data.subject,
+            body: data.body,
+            date: new Date(),
+            image: '',
+            name: 'Code for Interview',
+            starred: false,
+            type: 'sent'
+        }
+
+        sentEmailService.call(payload);
+
+        if (!sentEmailService.error) {
+            setOpenDrawer(false);
+            setData({});
+        } else {
+
+        }
+    }
+
+    const closeComposeMail = (e: MouseEvent) => {
+        e.preventDefault();
+
+        const payload = {
+            to: data.to,
+            from: "codeforinterview03@gmail.com",
+            subject: data.subject,
+            body: data.body,
+            date: new Date(),
+            image: '',
+            name: 'Code for Interview',
+            starred: false,
+            type: 'drafts'
+        }
+
+        setDraftServices.call(payload);
+
+        if (!setDraftServices.error) {
+            setOpenDrawer(false);
+            setData({});
+        } else {
+
+        }
+    }
+
 
     return (
-        <>
-        </>
+        <Dialog
+            open={open}
+            PaperProps={{ sx: dialogStyle }}
+        >
+            <Header>
+                <Typography>New Message</Typography>
+                <Close fontSize='small' onClick={(e) => closeComposeMail(e)} />
+            </Header>
+
+            <RecipientWrapper>
+                <InputBase placeholder='Recipients' name="to" onChange={(e) => onValueChange(e)} value={data.to} />
+                <InputBase placeholder='Subject' name="subject" onChange={(e) => onValueChange(e)} value={data.subject} />
+            </RecipientWrapper>
+            <TextField
+                multiline
+                rows={20}
+                sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
+                name="body"
+                onChange={(e) => onValueChange(e)}
+                value={data.body}
+            />
+            <Footer>
+                <SendButton onClick={(e) => sendEmail(e)}>Send</SendButton>
+                <DeleteOutline onClick={() => setOpenDrawer(false)} />
+            </Footer>
+        </Dialog>
     )
 }
 

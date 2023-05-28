@@ -1,7 +1,7 @@
 const ViewEmails = () => {
     return (
         <>
-            components/viewEmails/index.tsx
+            ViewEmails
         </>
     )
 }
